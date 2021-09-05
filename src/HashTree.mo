@@ -32,21 +32,27 @@ module {
                 ));
             };
             case (#Labeled(l, t)) {
-                let h = domainSeperator("ic-hashtree-labeled");
-                Blob.fromArray(SHA256.sum256(
-                    append([h, l, reconstruct(t)]),
-                ));
+                labeledHash(l, reconstruct(t));
             };
             case (#Leaf(v)) {
-                let h = domainSeperator("ic-hashtree-leaf");
-                Blob.fromArray(SHA256.sum256(
-                    append([h, v]),
-                ));
+                leafHash(v);
             };
             case (#Pruned(h)) {
                 h;
             };
         };
+    };
+
+    public func labeledHash(l : Label, content : Hash) : Hash {
+        Blob.fromArray(SHA256.sum256(
+            append([domainSeperator("ic-hashtree-labeled"), l, content]),
+        ));
+    };
+
+    public func leafHash(content : Blob) : Hash {
+        Blob.fromArray(SHA256.sum256(
+            append([domainSeperator("ic-hashtree-leaf"), content]),
+        ));
     };
 
     private func append(xs : [Blob]) : [Nat8] {
