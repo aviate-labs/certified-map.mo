@@ -6,41 +6,41 @@ import SHA256 "mo:sha/SHA256";
 import Text "mo:base/Text";
 
 module {
-    type Hash  = Blob;
-    type Label = Blob;
+    public type Hash  = Blob;
+    public type Label = Blob;
 
-    type HashTree<T> = {
+    public type HashTree = {
         #Empty;
-        #Fork    : (HashTree<T>, HashTree<T>);
-        #Labeled : (Label,       HashTree<T>);
+        #Fork    : (HashTree, HashTree);
+        #Labeled : (Label,    HashTree);
         #Leaf    : Blob;
         #Pruned  : Hash;
     };
 
-    public func reconstruct<T>(t : HashTree<T>) : Hash {
+    public func reconstruct(t : HashTree) : Hash {
         switch (t) {
             case (#Empty) {
-                let ds = domainSeperator("ic-hashtree-empty");
+                let h = domainSeperator("ic-hashtree-empty");
                 Blob.fromArray(SHA256.sum256(
-                    Blob.toArray(ds),
+                    Blob.toArray(h),
                 ));
             };
             case (#Fork(t1, t2)) {
-                let ds = domainSeperator("ic-hashtree-fork");
+                let h = domainSeperator("ic-hashtree-fork");
                 Blob.fromArray(SHA256.sum256(
-                    append([ds, reconstruct(t1), reconstruct(t2)]),
+                    append([h, reconstruct(t1), reconstruct(t2)]),
                 ));
             };
             case (#Labeled(l, t)) {
-                let ds = domainSeperator("ic-hashtree-labeled");
+                let h = domainSeperator("ic-hashtree-labeled");
                 Blob.fromArray(SHA256.sum256(
-                    append([ds, l, reconstruct(t)]),
+                    append([h, l, reconstruct(t)]),
                 ));
             };
             case (#Leaf(v)) {
-                let ds = domainSeperator("ic-hashtree-leaf");
+                let h = domainSeperator("ic-hashtree-leaf");
                 Blob.fromArray(SHA256.sum256(
-                    append([ds, v]),
+                    append([h, v]),
                 ));
             };
             case (#Pruned(h)) {
@@ -51,14 +51,14 @@ module {
 
     private func append(xs : [Blob]) : [Nat8] {
         var ys = Blob.toArray(xs[0]);
-        for (i in Iter.range(0, xs.size()-1)) {
+        for (i in Iter.range(1, xs.size()-1)) {
             ys := Array.append(ys, Blob.toArray(xs[i]));
         };
         ys;
     };
 
     private func domainSeperator(t : Text) : Blob {
-        Blob.fromArray(Array.append<Nat8>(
+        Blob.fromArray(Array.append(
             [Nat8.fromNat(t.size())],
             Blob.toArray(Text.encodeUtf8(t)),
         ));
