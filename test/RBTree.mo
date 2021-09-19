@@ -1,6 +1,6 @@
 import RBTree "../src/RBTree";
 
-private func isRed(n : ?Node) : Bool {
+func isRed(n : ?RBTree.Node) : Bool {
     switch (n) {
         case (? (_, _, _, _, #Red, _)) { true;  };
         case (_)                     { false; };
@@ -15,13 +15,13 @@ func isBalanced(t : RBTree.RBTree) : Bool {
                 _nrBlack == 0;
             };
             case (? n) {
-                if (not isRed(n)) {
+                if (not isRed(?n)) {
                     _nrBlack -= 1;
                 } else {
                     assert(not isRed(n.2));
                     assert(not isRed(n.3));
                 };
-                _isBalanced(n.left, _nrBlack) and _isBalanced(n.right, _nrBlack);
+                _isBalanced(n.2, _nrBlack) and _isBalanced(n.3, _nrBlack)
             };
         };
     };
@@ -33,8 +33,8 @@ func isBalanced(t : RBTree.RBTree) : Bool {
         switch (current) {
             case (null) { break l; };
             case (? n) {
-                if (not isRed(n)) nrBlack += 1;
-                current := current.left;
+                if (not isRed(?n)) nrBlack += 1;
+                current := n.2;
             };
         };
     };
