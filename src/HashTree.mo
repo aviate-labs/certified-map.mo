@@ -26,10 +26,7 @@ module {
                 ));
             };
             case (#Fork(t1, t2)) {
-                let h = domainSeperator("ic-hashtree-fork");
-                Blob.fromArray(SHA256.sum256(
-                    append([h, reconstruct(t1), reconstruct(t2)]),
-                ));
+                forkHash(reconstruct(t1), reconstruct(t2));
             };
             case (#Labeled(l, t)) {
                 labeledHash(l, reconstruct(t));
@@ -41,6 +38,13 @@ module {
                 h;
             };
         };
+    };
+
+    public func forkHash(l : Hash, r : Hash) : Hash {
+        let h = domainSeperator("ic-hashtree-fork");
+        Blob.fromArray(SHA256.sum256(
+            append([h, l, r]),
+        ));
     };
 
     public func labeledHash(l : Label, content : Hash) : Hash {
