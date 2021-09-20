@@ -1,3 +1,7 @@
+import Blob "mo:base/Blob";
+import Iter "mo:base/Iter";
+import Nat8 "mo:base/Nat8";
+
 import RBTree "../src/RBTree";
 
 func isRed(n : ?RBTree.Node) : Bool {
@@ -7,7 +11,7 @@ func isRed(n : ?RBTree.Node) : Bool {
     };
 };
 
-func isBalanced(t : RBTree.RBTree) : Bool {
+func isBalanced(t : ?RBTree.Node) : Bool {
     func _isBalanced(n : ?RBTree.Node, nrBlack : Nat) : Bool {
         var _nrBlack = nrBlack;
         switch (n) {
@@ -28,7 +32,7 @@ func isBalanced(t : RBTree.RBTree) : Bool {
 
     // Calculate number of black nodes by following left.
     var nrBlack = 0;
-    var current = t.root;
+    var current = t;
     label l loop {
         switch (current) {
             case (null) { break l; };
@@ -38,5 +42,25 @@ func isBalanced(t : RBTree.RBTree) : Bool {
             };
         };
     };
-    _isBalanced(t.root, nrBlack);
+    _isBalanced(t, nrBlack);
 };
+
+func toBlob(n : Nat8) : Blob {
+    Blob.fromArray([n]);
+};
+
+var tree : ?RBTree.Node = null;
+
+func insert(n : Nat8) {
+    let kv = toBlob(n);
+    let (nt, ov) = RBTree.insertRoot(tree, kv, kv);
+    assert(ov == null);
+    assert(isBalanced(?nt));
+    tree := ?nt;
+};
+
+insert(10);
+insert(8);
+insert(12);
+insert(9);
+insert(11);

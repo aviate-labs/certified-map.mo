@@ -17,12 +17,36 @@ module {
         };
     };
 
-    public type RBTree = {
-        root : ?Node;
+    public func insertRoot(root : ?Node, k : Blob, v : Blob) : (Node, ?Blob) {
+        let ((nk, nv, l, r, c, h), ov) = insert(root, k, v);
+        ((nk, nv, l, r, #Black, h), ov);
     };
 
-    public func get(t : RBTree, k : Blob) : ?Blob {
-        var root = t.root;
+    public func insert(t : ?Node, k : Blob, v : Blob) : (Node, ?Blob) {
+        switch (t) {
+            case (null) { (newNode(k, v), null); };
+            case (? n) {
+                let (nk, kv, l, r, c, h) = n;
+                let (nn, ov) : (Node, ?Blob) = switch (Blob.compare(k, nk)) {
+                    case (#less) {
+                        let (nl, ov) = insert(l, k, v);
+                        ((nk, kv, ?nl, r, c, h), ov);
+                    };
+                    case (#equal) {
+                        ((nk, v, l, r, c, h), ?kv);
+                    };
+                    case (#greater) {
+                        let (nr, ov) = insert(r, k, v);
+                        ((nk, kv, l, ?nr, c, h), ov);
+                    };
+                };
+                (balance(update(nn)), ov);
+            };
+        };
+    };
+
+    public func get(t : ?Node, k : Blob) : ?Blob {
+        var root = t;
         label l loop {
             let (key, v, l, r, _, _) = switch (root) {
                 case (null) { break l; };
