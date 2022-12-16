@@ -1,6 +1,5 @@
-import Blob "mo:base/Blob";
-import Order "mo:base/Order";
-import P "mo:base/Prelude";
+import Order "mo:base-0.7.3/Order";
+import P "mo:base-0.7.3/Prelude";
 
 import HashTree "HashTree";
 
@@ -17,17 +16,17 @@ module {
         };
     };
 
-    public func insertRoot(root : ?Node, k : Blob, v : Blob) : (Node, ?Blob) {
+    public func insertRoot(root : ?Node, k : [Nat8], v : [Nat8]) : (Node, ?[Nat8]) {
         let ((nk, nv, l, r, c, h), ov) = insert(root, k, v);
         ((nk, nv, l, r, #Black, h), ov);
     };
 
-    public func insert(t : ?Node, k : Blob, v : Blob) : (Node, ?Blob) {
+    public func insert(t : ?Node, k : [Nat8], v : [Nat8]) : (Node, ?[Nat8]) {
         switch (t) {
             case (null) { (newNode(k, v), null); };
             case (? n) {
                 let (nk, kv, l, r, c, h) = n;
-                let (nn, ov) : (Node, ?Blob) = switch (Blob.compare(k, nk)) {
+                let (nn, ov) : (Node, ?[Nat8]) = switch (compare(k, nk)) {
                     case (#less) {
                         let (nl, ov) = insert(l, k, v);
                         ((nk, kv, ?nl, r, c, h), ov);
@@ -45,14 +44,14 @@ module {
         };
     };
 
-    public func get(t : ?Node, k : Blob) : ?Blob {
+    public func get(t : ?Node, k : [Nat8]) : ?[Nat8] {
         var root = t;
         label l loop {
             let (key, v, l, r, _, _) = switch (root) {
                 case (null) { break l; };
                 case (? v)  { v;       };
             };
-            switch (Blob.compare(k, key)) {
+            switch (compare(k, key)) {
                 case (#less) {
                     root := l;
                 };
@@ -67,9 +66,23 @@ module {
         null;
     };
 
+    public func compare(xs : [Nat8], ys : [Nat8]) : { #less; #equal; #greater } {
+        if (xs.size() < ys.size()) return #less;
+        if (xs.size() > ys.size()) return #greater;
+        var i = 0;
+        while (i < xs.size()) {
+            let x = xs[i];
+            let y = ys[i];
+            if (x < y) return #less;
+            if (y < x) return #greater;
+            i += 1;
+        };
+        #equal;
+    };
+
     public type Node = (
-        key   : Blob,          // 0 : key
-        value : Blob,          // 1 : value
+        key   : [Nat8],          // 0 : key
+        value : [Nat8],          // 1 : value
         left  : ?Node,         // 2 : left
         right : ?Node,         // 3 : right
         color : Color,         // 4 : color
@@ -130,7 +143,7 @@ module {
     };
 
     // Returns a new node based on the given key and value.
-    public func newNode(key : Blob, value : Blob) : Node {
+    public func newNode(key : [Nat8], value : [Nat8]) : Node {
         let hash = HashTree.labeledHash(
             key,
             HashTree.leafHash(value),

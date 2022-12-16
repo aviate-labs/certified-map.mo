@@ -1,15 +1,13 @@
-import Blob "mo:base/Blob";
+import Blob "mo:base-0.7.3/Blob";
 import Hex "mo:encoding/Hex";
-import Nat8 "mo:base/Nat8";
-import SHA256 "mo:sha/SHA256";
-import Text "mo:base/Text";
+import Nat8 "mo:base-0.7.3/Nat8";
+import SHA256 "mo:crypto/SHA/SHA256";
+import Text "mo:base-0.7.3/Text";
 
 import HashTree "../src/HashTree";
 
-import Debug "mo:base/Debug";
-
-func b(t : Text) : Blob {
-    Text.encodeUtf8(t);
+func b(t : Text) : [Nat8] {
+    Blob.toArray(Text.encodeUtf8(t));
 };
 
 // Source: https://sdk.dfinity.org/docs/interface-spec/index.html#_example
@@ -25,20 +23,20 @@ let x : HashTree.HashTree = #Fork(
     #Empty,
 );
 assert(
-    Hex.encode(Blob.toArray(HashTree.reconstruct(x)))
-    == "1B4FEFF9BEF8131788B0C9DC6DBAD6E81E524249C879E9F10F71CE3749F5A638",
+    Hex.encode(HashTree.reconstruct(x))
+    == "1b4feff9bef8131788b0c9dc6dbad6e81e524249c879e9f10f71ce3749f5a638",
 );
 
 let bt : HashTree.HashTree = #Leaf(b("good"));
 assert(
-    Hex.encode(Blob.toArray(HashTree.reconstruct(bt)))
-    == "7B32AC0C6BA8CE35AC82C255FC7906F7FC130DAB2A090F80FE12F9C2CAE83BA6",
+    Hex.encode(HashTree.reconstruct(bt))
+    == "7b32ac0c6ba8ce35ac82c255fc7906f7fc130dab2a090f80fe12f9c2cae83ba6",
 );
 
 let c : HashTree.HashTree = #Labeled(b("c"), #Empty);
 assert(
-    Hex.encode(Blob.toArray(HashTree.reconstruct(c)))
-    == "EC8324B8A1F1AC16BD2E806EDBA78006479C9877FED4EB464A25485465AF601D",
+    Hex.encode(HashTree.reconstruct(c))
+    == "ec8324b8a1f1ac16bd2e806edba78006479c9877fed4eb464a25485465af601d",
 );
 
 let tree : HashTree.HashTree = #Fork(
@@ -56,6 +54,6 @@ let tree : HashTree.HashTree = #Fork(
 );
 
 assert(
-    Hex.encode(Blob.toArray(HashTree.reconstruct(tree)))
-    == "EB5C5B2195E62D996B84C9BCC8259D19A83786A2F59E0878CEC84C811F669AA0"
+    Hex.encode(HashTree.reconstruct(tree))
+    == "eb5c5b2195e62d996b84c9bcc8259d19a83786a2f59e0878cec84c811f669aa0"
 );

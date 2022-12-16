@@ -1,6 +1,6 @@
-import Blob "mo:base/Blob";
-import Iter "mo:base/Iter";
-import Nat8 "mo:base/Nat8";
+import Blob "mo:base-0.7.3/Blob";
+import Iter "mo:base-0.7.3/Iter";
+import Nat8 "mo:base-0.7.3/Nat8";
 
 import RBTree "../src/RBTree";
 
@@ -45,14 +45,10 @@ func isBalanced(t : ?RBTree.Node) : Bool {
     _isBalanced(t, nrBlack);
 };
 
-func toBlob(n : Nat8) : Blob {
-    Blob.fromArray([n]);
-};
-
 var tree : ?RBTree.Node = null;
 
 func insert(n : Nat8) {
-    let kv = toBlob(n);
+    let kv = [n];
     let (nt, ov) = RBTree.insertRoot(tree, kv, kv);
     assert(ov == null);
     assert(isBalanced(?nt));

@@ -1,29 +1,28 @@
-import Array "mo:base/Array";
-import Blob "mo:base/Blob";
-import Iter "mo:base/Iter";
-import Nat8 "mo:base/Nat8";
-import SHA256 "mo:sha/SHA256";
-import Text "mo:base/Text";
+import { Array_tabulate } = "mo:⛔";
+import Blob "mo:base-0.7.3/Blob";
+import Iter "mo:base-0.7.3/Iter";
+import Nat8 "mo:base-0.7.3/Nat8";
+import SHA256 "mo:crypto/SHA/SHA256";
+import Text "mo:base-0.7.3/Text";
 
 module {
-    public type Hash  = Blob;
-    public type Label = Blob;
+    // TODO: replace [Nat8] with Blob, once it support indices.
+    public type Hash  = [Nat8];
+    public type Label = [Nat8];
 
     public type HashTree = {
         #Empty;
         #Fork    : (HashTree, HashTree);
         #Labeled : (Label,    HashTree);
-        #Leaf    : Blob;
+        #Leaf    : [Nat8];
         #Pruned  : Hash;
     };
 
     public func reconstruct(t : HashTree) : Hash {
         switch (t) {
             case (#Empty) {
-                let h = domainSeperator("ic-hashtree-empty");
-                Blob.fromArray(SHA256.sum256(
-                    Blob.toArray(h),
-                ));
+                let h = domainSeparator("ic-hashtree-empty");
+                SHA256.sum(h);
             };
             case (#Fork(t1, t2)) {
                 forkHash(reconstruct(t1), reconstruct(t2));
@@ -41,36 +40,49 @@ module {
     };
 
     public func forkHash(l : Hash, r : Hash) : Hash {
-        let h = domainSeperator("ic-hashtree-fork");
-        Blob.fromArray(SHA256.sum256(
-            append([h, l, r]),
-        ));
+        let h = domainSeparator("ic-hashtree-fork");
+        SHA256.sum(append([h, l, r]));
     };
 
     public func labeledHash(l : Label, content : Hash) : Hash {
-        Blob.fromArray(SHA256.sum256(
-            append([domainSeperator("ic-hashtree-labeled"), l, content]),
-        ));
+        SHA256.sum(append([domainSeparator("ic-hashtree-labeled"), l, content]));
     };
 
-    public func leafHash(content : Blob) : Hash {
-        Blob.fromArray(SHA256.sum256(
-            append([domainSeperator("ic-hashtree-leaf"), content]),
-        ));
+    public func leafHash(content : [Nat8]) : Hash {
+        SHA256.sum(append([domainSeparator("ic-hashtree-leaf"), content]));
     };
 
-    private func append(xs : [Blob]) : [Nat8] {
-        var ys = Blob.toArray(xs[0]);
-        for (i in Iter.range(1, xs.size()-1)) {
-            ys := Array.append(ys, Blob.toArray(xs[i]));
-        };
-        ys;
+    private func append(xs : [[Nat8]]) : [Nat8] {
+        var size = 0;
+        let sizes = Array_tabulate<(Nat, Nat)>(
+            xs.size(),
+            func (i : Nat) : (Nat, Nat) {
+                let s = size;
+                size += xs[i].size();
+                (s, size);
+            }
+        );
+        var index = 0;
+        Array_tabulate(
+            size,
+            func (i : Nat) : Nat8 {
+                let (f0, t0) = sizes[index];
+                if (i < t0) return xs[index][i - f0];
+                index += 1;
+                let (f1, _) = sizes[index];
+                return xs[index][i - f1];
+            }
+        );
     };
 
-    private func domainSeperator(t : Text) : Blob {
-        Blob.fromArray(Array.append(
-            [Nat8.fromNat(t.size())],
-            Blob.toArray(Text.encodeUtf8(t)),
-        ));
+    private func domainSeparator(t : Text) : [Nat8] {
+        let text = Blob.toArray(Text.encodeUtf8(t));
+        Array_tabulate(
+            t.size() + 1,
+            func (i : Nat) : Nat8 {
+                if (i == 0) return Nat8.fromNat(t.size());
+                text[i - 1];
+            }
+        );
     };
 };
